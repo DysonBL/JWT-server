@@ -1,13 +1,18 @@
 const express = require("express");
 const App = express();
-const { Data } = require("./Components/Data");
+// const { Data, tours } = require("./Components/Data");
 const jwt = require("jsonwebtoken");
-const Port = 3001;
+const Port = 3004;
 App.use(express.json()); //midilewhere
 const cors = require("cors");
+const { Data, Juice } = require("./Components/Data");
+
+App.listen(Port, () => {
+  console.log(`COOL Your App is Runnig GOOD ${Port}`);
+});
 
 const corsOptions = {
-  origin: "http://localhost:3001",
+  origin: "http://localhost:3000",
   credentials: true,
   optionSuccessStatus: 200,
 };
@@ -17,7 +22,7 @@ App.get("/", (req, res) => {
 });
 
 // signup
-App.post("/signup", (req, res) => {
+App.post("/signup", (req,res) => {
   let Name = req.body.Name;
   let Mail = req.body.Mail;
   let password = req.body.password;
@@ -26,40 +31,47 @@ App.post("/signup", (req, res) => {
     Mail,
     password,
   });
-  //   const Token =jwt.sign({Name},"jksdjlj",{expiresIn:'1m'})
+  console.log("hai original secred maik",[Name,Mail,password])
+  const Token =jwt.sign({Mail},"hdhdhdhd",{expiresIn:'1m'})
   res.status(200).json({
     status: "You signup success",
+    user:Data
   });
-  console.log(Data, "data");
+  console.log(Data, "Data from sign");
 });
 //Login
 App.post("/login", (req, res) => {
-  const { Name, Mail, password } = req.body;
-  const data = Data.find((user) => user.Name === Name);
-  if (!Data) {
+  console.log("bodys",req.body)
+  const {Mail, password } = req.body;
+  console.log(Mail,"Mail")
+  const data = Data.find((user) => user.Mail===Mail);
+  console.log("hai login data",data)
+  if (!data) {
     res.status(400).json({
-      status: "falid to login",
+      status: "falid to login user",
       error: { msg: "User not found" },
     });
   }
-  const Token = jwt.sign({ Name }, "jksdjlj", { expiresIn: "1m" });
-  const refreshToken = jwt.sign({ Mail }, "jksdjlj", { expiresIn: "1h" });
-  console.log(Token, "login");
+  const Token = jwt.sign({ Mail }, "hdhdhdhd", { expiresIn: "1m" });
+  const refreshToken = jwt.sign({ Mail }, "hdhdhdhd", { expiresIn: "1h" });
+  console.log(Token, "get login token");
   res.status(200).json({
+    status:"success",
     Token,
     refreshToken,
   });
 });
+//Refresh
 App.post("/refresh", (req, res) => {
-  const refreshToken = req.headers["x-access-token"];
-  console.log(req.headers, "hiiireq");
+  console.log("refresh",req.body['x-access-token'])
+  const refreshToken = req.body["x-access-token"];
   let decode = jwt.decode(refreshToken);
-  console.log(decode, "va deco");
+  console.log("hai",decode)
   let curentMail = decode.Mail;
-  let Mail = Data.find((user) => user.Mail);
+  // let Mail = Data.find((user) =>user.Email);
   console.log(curentMail, "curr");
   if (curentMail) {
-    const Token = jwt.sign({ curentMail }, "jdsgkjsd", { expiresIn: "1m" });
+    const Token = jwt.sign({ curentMail }, "hdhdhdhd", { expiresIn: "1m" });
     return res.status(200).json({
       status: {
         Msg: "Your goto agin Sign In",
@@ -69,30 +81,40 @@ App.post("/refresh", (req, res) => {
     });
   }
 });
-App.post("/check", (req, res, next) => {
-  const { tokenExpireError } = jwt;
-  const catchError = (req, res) => {
-    if (Erro instanceof tokenExpireError) {
+
+//Check
+const checkAuth = (req, res, next) => {
+  console.log("i am in check auth")
+  const  {TokenExpiredError } = jwt;
+  const catchError = (error, res) => {
+    if (error instanceof TokenExpiredError) {
       return res
         .status(401)
-        .send({ Message: "Unauthorized! Access Token was expired!" });
+        .send({ Message: "Unauthorized! AccessToken was expired!" });
     }
     return res.status(401).send({ message: "Unauthorized!" });
   };
   const token = req.headers["x-access-token"];
   if (!token) {
     res.status(400).json({
-      errors: [{ msg: " Token is not Found" }],
+      errors: [{ msg: " Token is not Found" }]
     });
   }
-  jwt.verify(token, "jdsgkjsd", (err, decoded) => {
-    if (err) {
-      return catchError(err, res);
+  jwt.verify(token, "hdhdhdhd", (error,decoded) => {
+    console.log("decoces",decoded)
+    if (error) {
+      return catchError(error, res);
     }
     next();
   });
+};
+
+//Get User
+App.get("/user",checkAuth,(req, res) => {
+  console.log("user chechauth")
+  res.status(200).json({
+    status: "success get your Page",
+    item: Juice,
+  });
 });
 
-App.listen(Port, () => {
-  console.log(`COOL Your App is Runnig GOOD ${Port}`);
-});

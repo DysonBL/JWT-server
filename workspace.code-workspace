@@ -1,13 +1,7 @@
 {
 	"folders": [
 		{
-			"path": "."
-		},
-		{
-			"path": "../clint-login"
-		},
-		{
-			"path": "../../my-app"
+			"path": ".."
 		}
 	],
 	"settings": {}
